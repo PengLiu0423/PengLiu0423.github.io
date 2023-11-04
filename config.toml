@@ -1,0 +1,64 @@
+baseURL = "http://peng.guru/"
+languageCode = "zh-cn"
+DefaultContentLanguage = "zh-cn"
+theme = "simpleness"
+
+title = "Peng's blog"
+enableInlineShortcodes = true
+enableEmoji = true
+googleAnalytics = "G-QFLHVFMQKV"
+
+[params]
+  lazyImage = true
+  enableMathJax = false # enable it in Front Matter
+  enableReadingTime = true
+  favicon = "favicon.ico"
+  startyear = "2022"
+  description = ""
+  disqus = ""
+
+[params.giscus]
+repo = "PengLiu0423/discussion"
+repoID = "R_kgDOJBibYw"
+category = "Announcements"
+categoryID = "DIC_kwDOJBibY84CUanA"
+mapping = "pathname"
+strict = "0"
+reactionsEnabled = "1"
+emitMetadata = "0"
+inputPosition = "bottom"
+theme = "preferred_color_scheme"
+lang = "zh-CN"
+
+
+[menu]
+  [[menu.main]]
+  name = "Home"
+  url = "/"
+  weight = 1
+  [[menu.main]]
+  name = "About"
+  url = "/about/"
+  weight = 2
+
+[social]
+  github = "https://github.com/PengLiu0423"
+  rss = "index.xml"
+
+[taxonomies]
+category = "categories"
+tag = "tags"
+
+# doc: https://gohugo.io/getting-started/configuration-markup#highlight
+# syntax style: https://xyproto.github.io/splash/docs/longer/all.html
+[markup]
+  [markup.highlight]
+    guessSyntax = true
+    hl_Lines = ""
+    # lineNoStart = 1
+    # lineNos = true
+    # lineNumbersInTable = true
+    noClasses = true
+    style = "monokai" # github, dracula, vim, monokai
+    tabWidth = 4
+    
