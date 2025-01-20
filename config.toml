@@ -13,7 +13,7 @@ googleAnalytics = "G-QFLHVFMQKV"
   enableMathJax = false # enable it in Front Matter
   enableReadingTime = true
   favicon = "favicon.ico"
-  startyear = "2022"
+  startyear = "2024"
   description = ""
   disqus = ""
 
@@ -33,13 +33,22 @@ lang = "zh-CN"
 
 [menu]
   [[menu.main]]
-  name = "Home"
+  name = "主页"
   url = "/"
   weight = 1
   [[menu.main]]
-  name = "About"
-  url = "/about/"
+  name = "学习"
+  url = "/categories/学习/"
   weight = 2
+  [[menu.main]]
+  name = "投资"
+  url = "/categories/投资/"
+  weight = 3
+  [[menu.main]]
+  name = "关于"
+  url = "/about/"
+  weight = 4
+
 
 [social]
   github = "https://github.com/PengLiu0423"

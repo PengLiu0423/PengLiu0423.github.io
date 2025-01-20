@@ -2,38 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on Peng&#39;s blog</title>
-    <link>http://peng.guru/categories/</link>
+    <link>https://pengliu0423.github.io/categories/</link>
     <description>Recent content in Categories on Peng&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 18 Sep 2019 12:13:38 +0500</lastBuildDate>
-    <atom:link href="http://peng.guru/categories/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 08 Mar 2020 08:20:14 +0800</lastBuildDate>
+    <atom:link href="https://pengliu0423.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Whisper</title>
-      <link>http://peng.guru/categories/whisper/</link>
-      <pubDate>Wed, 18 Sep 2019 12:13:38 +0500</pubDate>
-      <guid>http://peng.guru/categories/whisper/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Shortcodes</title>
-      <link>http://peng.guru/categories/shortcodes/</link>
-      <pubDate>Fri, 06 Sep 2019 12:13:36 +0530</pubDate>
-      <guid>http://peng.guru/categories/shortcodes/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Text</title>
-      <link>http://peng.guru/categories/text/</link>
-      <pubDate>Sun, 18 Mar 2018 12:13:35 +0530</pubDate>
-      <guid>http://peng.guru/categories/text/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Hugo</title>
-      <link>http://peng.guru/categories/hugo/</link>
-      <pubDate>Sun, 18 Mar 2018 12:13:32 +0530</pubDate>
-      <guid>http://peng.guru/categories/hugo/</guid>
+      <title>学习</title>
+      <link>https://pengliu0423.github.io/categories/%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Sun, 08 Mar 2020 08:20:14 +0800</pubDate>
+      <guid>https://pengliu0423.github.io/categories/%E5%AD%A6%E4%B9%A0/</guid>
       <description></description>
     </item>
   </channel>

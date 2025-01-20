@@ -2,9 +2,9 @@
 title: "探究Golang之编译原理"
 date: 2020-03-08T08:20:14+08:00
 tags: ["Golang","编译原理"]
-categories: ["Golang"]
+categories: ["学习"]
 comment: true
-draft: true
+draft: false
 toc: true
 ---
 go语言是一门编译型语言，也就说代码需要编译成目标机器码才能在目标机器上运行。以下面demo.go为例，看看go语言编译器背后做了些什么事情。ttttt

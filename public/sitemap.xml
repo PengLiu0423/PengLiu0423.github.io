@@ -2,70 +2,31 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://peng.guru/about/</loc>
+    <loc>https://pengliu0423.github.io/about/</loc>
     <lastmod>2020-09-22T10:37:58+05:30</lastmod>
   </url><url>
-    <loc>http://peng.guru/categories/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/categories/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/tags/markdown/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/tags/golang/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/posts/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/posts/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/tags/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/tags/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/posts/post-5/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/categories/whisper/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/posts/%E6%8E%A2%E7%A9%B6golang%E4%B9%8B%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url><url>
-    <loc>http://peng.guru/tags/image/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/posts/post-6/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/categories/shortcodes/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/tags/chinese/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/tags/plain/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/categories/text/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/posts/post-4/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/categories/hugo/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/posts/post-3/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/tags/mathjax/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/tags/test/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/posts/post-2/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/tags/emoji/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
-  </url><url>
-    <loc>http://peng.guru/posts/post-1/</loc>
-    <lastmod>2020-10-09T10:13:38+08:00</lastmod>
+    <loc>https://pengliu0423.github.io/categories/%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2020-03-08T08:20:14+08:00</lastmod>
   </url>
 </urlset>
