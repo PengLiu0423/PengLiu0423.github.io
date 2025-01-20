@@ -18,10 +18,10 @@ googleAnalytics = "G-QFLHVFMQKV"
   disqus = ""
 
 [params.giscus]
-repo = "PengLiu0423/discussion"
-repoID = "R_kgDOJBibYw"
+repo = "PengLiu0423/pengliu0423.github.io"
+repoID = "R_kgDOKpBj9Q"
 category = "Announcements"
-categoryID = "DIC_kwDOJBibY84CUanA"
+categoryID = "DIC_kwDOKpBj9c4CmLv4"
 mapping = "pathname"
 strict = "0"
 reactionsEnabled = "1"
