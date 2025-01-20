@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Hugo 0.120.2">
+  <title> 探究Golang之编译原理 | Peng&#39;s blog </title>
+  <link rel="stylesheet" href="https://pengliu0423.github.io/css/simpleness.css">
+  <link rel="canonical" href="https://pengliu0423.github.io/posts/%E6%8E%A2%E7%A9%B6golang%E4%B9%8B%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">
+  <link rel="alternate" type="application/rss+xml" href="" title="Peng&#39;s blog">
+  
+  
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+  
+  
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QFLHVFMQKV"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-QFLHVFMQKV', { 'anonymize_ip': false });
+}
+</script>
+
+  
+</head>
+<body class="container">
+  <nav class="navigation">
+  <div class="nav-left">
+    
+    <div class="nav-item nav-title">
+      <a href="https://pengliu0423.github.io/"> Peng&#39;s blog</a>
+    </div>
+    <div class="nav-item nav-menu">
+      
+      <a href="/"> 主页</a>
+      
+      <a href="/categories/%E5%AD%A6%E4%B9%A0/"> 学习</a>
+      
+      <a href="/categories/%E6%8A%95%E8%B5%84/"> 投资</a>
+      
+      <a href="/about/"> 关于</a>
+      
+    </div>
+  </div>
+  <div class="nav-item nav-right fontawesome">
+    
+    
+    <a href="https://github.com/PengLiu0423" target="_blank">
+      <i title="GitHub" class="fab fa-github"></i>
+    </a>
+    
+    
+    <a href="https://pengliu0423.github.io/index.xml" target="_blank">
+      <i title="RSS" class="fas fa-rss"></i>
+    </a>
+    
+  </div>
+</nav>
+
+  
+<article class="post">
+  <header class="post-header">
+    <h1 style="text-align: center;" >探究Golang之编译原理</h1>
+    <div class="post-metadata">
+    
+      <time datetime="2020-03-08T08:20:14&#43;08:00">March 08, 2020</time> &nbsp; 
+    
+    
+    
+    
+    
+      <i class="far fa-clock"></i>
+      
+      
+      
+      
+        17 min
+      
+      47 s
+      &nbsp;
+    
+    
+      <i class="fas fa-folder"></i>
+      
+      <a href="/categories/%E5%AD%A6%E4%B9%A0">学习</a>
+      &nbsp;
+      
+    
+    </div>
+  </header>
+
+  
+  <div class="post-toc">
+    <div class="post-toc-title">Contents</div>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#词法分析">词法分析</a></li>
+    <li><a href="#语法分析">语法分析</a></li>
+    <li><a href="#语义分析">语义分析</a></li>
+    <li><a href="#中间代码生成">中间代码生成</a></li>
+    <li><a href="#机器码生成">机器码生成</a></li>
+    <li><a href="#参考">参考</a></li>
+  </ul>
+</nav>
+  </div>
+  
+
+  <div class="post-text">
+    <p>go语言是一门编译型语言，也就说代码需要编译成目标机器码才能在目标机器上运行。以下面demo.go为例，看看go语言编译器背后做了些什么事情。ttttt</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello world&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="词法分析">词法分析</h2>
+<p>词法分析是编译的第一步,它的作用是解析源文件,将文件中的字符串序列转换成Token序列。通常会把执行词法分析的程序称为词法解析器（lexer）,也叫扫描器（scanner）。</p>
+<p>go语言的扫描器源代码位于<code>src/cmd/compile/internal/syntax</code>的<code>scanner</code>结构体,Token定义位于<code>src/cmd/compile/internal/syntax/tokens.go</code>。</p>
+<p>通过源代码可以看到,词法分析主要是<code>scanner.next</code>方法驱动,主体是一个的switch case表示的状态机。在这个阶段,可以检测到单词拼写和非法字符错误。例如：~、@等符号，0x5j(16进制表示错误)</p>
+<p>下面是demo.go被扫描的结果：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">位置</th>
+<th style="text-align:center">记号</th>
+<th style="text-align:center">token</th>
+<th style="text-align:center">注释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1:1</td>
+<td style="text-align:center">package</td>
+<td style="text-align:center">_Package</td>
+<td style="text-align:center">关键字</td>
+</tr>
+<tr>
+<td style="text-align:center">1:9</td>
+<td style="text-align:center">main</td>
+<td style="text-align:center">_Name</td>
+<td style="text-align:center">名称main</td>
+</tr>
+<tr>
+<td style="text-align:center">1:13</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">_Semi</td>
+<td style="text-align:center">分号</td>
+</tr>
+<tr>
+<td style="text-align:center">3:1</td>
+<td style="text-align:center">import</td>
+<td style="text-align:center">_Import</td>
+<td style="text-align:center">关键字</td>
+</tr>
+<tr>
+<td style="text-align:center">3:8</td>
+<td style="text-align:center">&ldquo;fmt&rdquo;</td>
+<td style="text-align:center">_Literal</td>
+<td style="text-align:center">字面量fmt</td>
+</tr>
+<tr>
+<td style="text-align:center">3:13</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">_Semi</td>
+<td style="text-align:center">分号</td>
+</tr>
+<tr>
+<td style="text-align:center">5:1</td>
+<td style="text-align:center">func</td>
+<td style="text-align:center">_Func</td>
+<td style="text-align:center">关键字</td>
+</tr>
+<tr>
+<td style="text-align:center">5:6</td>
+<td style="text-align:center">main</td>
+<td style="text-align:center">_Name</td>
+<td style="text-align:center">名称main</td>
+</tr>
+<tr>
+<td style="text-align:center">5:10</td>
+<td style="text-align:center">(</td>
+<td style="text-align:center">_Lparen</td>
+<td style="text-align:center">左括号</td>
+</tr>
+<tr>
+<td style="text-align:center">5:11</td>
+<td style="text-align:center">)</td>
+<td style="text-align:center">_Rparen</td>
+<td style="text-align:center">右括号</td>
+</tr>
+<tr>
+<td style="text-align:center">5:13</td>
+<td style="text-align:center">{</td>
+<td style="text-align:center">_Lbrace</td>
+<td style="text-align:center">左大括号</td>
+</tr>
+<tr>
+<td style="text-align:center">6:2</td>
+<td style="text-align:center">fmt</td>
+<td style="text-align:center">_Name</td>
+<td style="text-align:center">名称fmt</td>
+</tr>
+<tr>
+<td style="text-align:center">6:5</td>
+<td style="text-align:center">.</td>
+<td style="text-align:center">_Dot</td>
+<td style="text-align:center">点号</td>
+</tr>
+<tr>
+<td style="text-align:center">6:6</td>
+<td style="text-align:center">Println</td>
+<td style="text-align:center">_Name</td>
+<td style="text-align:center">名称Println</td>
+</tr>
+<tr>
+<td style="text-align:center">6:13</td>
+<td style="text-align:center">(</td>
+<td style="text-align:center">_Lparen</td>
+<td style="text-align:center">左括号</td>
+</tr>
+<tr>
+<td style="text-align:center">6:17</td>
+<td style="text-align:center">&ldquo;hello world&rdquo;</td>
+<td style="text-align:center">_Literal</td>
+<td style="text-align:center">字面量hello world</td>
+</tr>
+<tr>
+<td style="text-align:center">6:27</td>
+<td style="text-align:center">)</td>
+<td style="text-align:center">_Rparen</td>
+<td style="text-align:center">右括号</td>
+</tr>
+<tr>
+<td style="text-align:center">6:28</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">_Semi</td>
+<td style="text-align:center">分号</td>
+</tr>
+<tr>
+<td style="text-align:center">7:1</td>
+<td style="text-align:center">}</td>
+<td style="text-align:center">_Rbrace</td>
+<td style="text-align:center">右大括号</td>
+</tr>
+<tr>
+<td style="text-align:center">7:2</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">_Semi</td>
+<td style="text-align:center">分号</td>
+</tr>
+</tbody>
+</table>
+<p>这个例子可以在<code>src/cmd/compile/internal/syntax/scanner_test.go</code>的<code>TestScanner</code>测试用例跑，可以看到最后生成的是带有行、列数字的Token序列。</p>
+<h2 id="语法分析">语法分析</h2>
+<p>语法分析是编译的第二步，它的作用是将上一步生成的Token序列按给定的形式文法生成抽象语法树（AST）。通常用前后文无关文法或与之等价的Backus-Naur范式(BNF)将相应程序设计语言的文法准确的描述出来，go语言使用的是相应的变种EBNF。</p>
+<p>go语言的语法分析器源代码位于<code>src/cmd/compile/internal/syntax</code>的<code>parser</code>结构体。在编译器入口的<code>src/cmd/compile/internal/gc</code>的main.go中，会调用<code>parseFiles</code>函数初始化<code>parser</code>结构体，对输入的所有文件进行词法与语法分析得到文件对应的抽象语法树。</p>
+<p>语法分析的过程可以检测一些形式上的错误，例如：括号是否缺少一半，+ 号表达式缺少一个操作数等。</p>
+<p>下面是demo.go语法分析的结果：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span> 	 0  *ast.File {
+</span></span><span style="display:flex;"><span>     1  .  Package: 1:1
+</span></span><span style="display:flex;"><span>     2  .  Name: *ast.Ident {
+</span></span><span style="display:flex;"><span>     3  .  .  NamePos: 1:9
+</span></span><span style="display:flex;"><span>     4  .  .  Name: &#34;main&#34;
+</span></span><span style="display:flex;"><span>     5  .  }
+</span></span><span style="display:flex;"><span>     6  .  Decls: []ast.Decl (len = 2) {
+</span></span><span style="display:flex;"><span>     7  .  .  0: *ast.GenDecl {
+</span></span><span style="display:flex;"><span>     8  .  .  .  TokPos: 3:1
+</span></span><span style="display:flex;"><span>     9  .  .  .  Tok: import
+</span></span><span style="display:flex;"><span>    10  .  .  .  Lparen: -
+</span></span><span style="display:flex;"><span>    11  .  .  .  Specs: []ast.Spec (len = 1) {
+</span></span><span style="display:flex;"><span>    12  .  .  .  .  0: *ast.ImportSpec {
+</span></span><span style="display:flex;"><span>    13  .  .  .  .  .  Path: *ast.BasicLit {
+</span></span><span style="display:flex;"><span>    14  .  .  .  .  .  .  ValuePos: 3:8
+</span></span><span style="display:flex;"><span>    15  .  .  .  .  .  .  Kind: STRING
+</span></span><span style="display:flex;"><span>    16  .  .  .  .  .  .  Value: &#34;\&#34;fmt\&#34;&#34;
+</span></span><span style="display:flex;"><span>    17  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    18  .  .  .  .  .  EndPos: -
+</span></span><span style="display:flex;"><span>    19  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    20  .  .  .  }
+</span></span><span style="display:flex;"><span>    21  .  .  .  Rparen: -
+</span></span><span style="display:flex;"><span>    22  .  .  }
+</span></span><span style="display:flex;"><span>    23  .  .  1: *ast.FuncDecl {
+</span></span><span style="display:flex;"><span>    24  .  .  .  Name: *ast.Ident {
+</span></span><span style="display:flex;"><span>    25  .  .  .  .  NamePos: 5:6
+</span></span><span style="display:flex;"><span>    26  .  .  .  .  Name: &#34;main&#34;
+</span></span><span style="display:flex;"><span>    27  .  .  .  .  Obj: *ast.Object {
+</span></span><span style="display:flex;"><span>    28  .  .  .  .  .  Kind: func
+</span></span><span style="display:flex;"><span>    29  .  .  .  .  .  Name: &#34;main&#34;
+</span></span><span style="display:flex;"><span>    30  .  .  .  .  .  Decl: *(obj @ 23)
+</span></span><span style="display:flex;"><span>    31  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    32  .  .  .  }
+</span></span><span style="display:flex;"><span>    33  .  .  .  Type: *ast.FuncType {
+</span></span><span style="display:flex;"><span>    34  .  .  .  .  Func: 5:1
+</span></span><span style="display:flex;"><span>    35  .  .  .  .  Params: *ast.FieldList {
+</span></span><span style="display:flex;"><span>    36  .  .  .  .  .  Opening: 5:10
+</span></span><span style="display:flex;"><span>    37  .  .  .  .  .  Closing: 5:11
+</span></span><span style="display:flex;"><span>    38  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    39  .  .  .  }
+</span></span><span style="display:flex;"><span>    40  .  .  .  Body: *ast.BlockStmt {
+</span></span><span style="display:flex;"><span>    41  .  .  .  .  Lbrace: 5:13
+</span></span><span style="display:flex;"><span>    42  .  .  .  .  List: []ast.Stmt (len = 1) {
+</span></span><span style="display:flex;"><span>    43  .  .  .  .  .  0: *ast.ExprStmt {
+</span></span><span style="display:flex;"><span>    44  .  .  .  .  .  .  X: *ast.CallExpr {
+</span></span><span style="display:flex;"><span>    45  .  .  .  .  .  .  .  Fun: *ast.SelectorExpr {
+</span></span><span style="display:flex;"><span>    46  .  .  .  .  .  .  .  .  X: *ast.Ident {
+</span></span><span style="display:flex;"><span>    47  .  .  .  .  .  .  .  .  .  NamePos: 6:2
+</span></span><span style="display:flex;"><span>    48  .  .  .  .  .  .  .  .  .  Name: &#34;fmt&#34;
+</span></span><span style="display:flex;"><span>    49  .  .  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    50  .  .  .  .  .  .  .  .  Sel: *ast.Ident {
+</span></span><span style="display:flex;"><span>    51  .  .  .  .  .  .  .  .  .  NamePos: 6:6
+</span></span><span style="display:flex;"><span>    52  .  .  .  .  .  .  .  .  .  Name: &#34;Println&#34;
+</span></span><span style="display:flex;"><span>    53  .  .  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    54  .  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    55  .  .  .  .  .  .  .  Lparen: 6:13
+</span></span><span style="display:flex;"><span>    56  .  .  .  .  .  .  .  Args: []ast.Expr (len = 1) {
+</span></span><span style="display:flex;"><span>    57  .  .  .  .  .  .  .  .  0: *ast.BasicLit {
+</span></span><span style="display:flex;"><span>    58  .  .  .  .  .  .  .  .  .  ValuePos: 6:14
+</span></span><span style="display:flex;"><span>    59  .  .  .  .  .  .  .  .  .  Kind: STRING
+</span></span><span style="display:flex;"><span>    60  .  .  .  .  .  .  .  .  .  Value: &#34;\&#34;hello world\&#34;&#34;
+</span></span><span style="display:flex;"><span>    61  .  .  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    62  .  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    63  .  .  .  .  .  .  .  Ellipsis: -
+</span></span><span style="display:flex;"><span>    64  .  .  .  .  .  .  .  Rparen: 6:27
+</span></span><span style="display:flex;"><span>    65  .  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    66  .  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    67  .  .  .  .  }
+</span></span><span style="display:flex;"><span>    68  .  .  .  .  Rbrace: 7:1
+</span></span><span style="display:flex;"><span>    69  .  .  .  }
+</span></span><span style="display:flex;"><span>    70  .  .  }
+</span></span><span style="display:flex;"><span>    71  .  }
+</span></span><span style="display:flex;"><span>    72  .  Scope: *ast.Scope {
+</span></span><span style="display:flex;"><span>    73  .  .  Objects: map[string]*ast.Object (len = 1) {
+</span></span><span style="display:flex;"><span>    74  .  .  .  &#34;main&#34;: *(obj @ 27)
+</span></span><span style="display:flex;"><span>    75  .  .  }
+</span></span><span style="display:flex;"><span>    76  .  }
+</span></span><span style="display:flex;"><span>    77  .  Imports: []*ast.ImportSpec (len = 1) {
+</span></span><span style="display:flex;"><span>    78  .  .  0: *(obj @ 12)
+</span></span><span style="display:flex;"><span>    79  .  }
+</span></span><span style="display:flex;"><span>    80  .  Unresolved: []*ast.Ident (len = 1) {
+</span></span><span style="display:flex;"><span>    81  .  .  0: *(obj @ 46)
+</span></span><span style="display:flex;"><span>    82  .  }
+</span></span><span style="display:flex;"><span>    83  }
+</span></span></code></pre></div><ul>
+<li>Package: 1:1代表Go解析出package这个Token在第一行的第一个</li>
+<li>main是一个ast.Ident标识符，它的位置在第一行的第9个</li>
+<li>此处func main被解析成ast.FuncDecl（function declaration）,而函数的参数（Params）和函数体（Body）自然也在这个FuncDecl中。Params对应的是*ast.FieldList，顾名思义就是项列表；而由大括号“｛｝”组成的函数体对应的是ast.BlockStmt（block statement）</li>
+<li>而对于main函数的函数体中，我们可以看到调用了println函数，在ast中对应的是ExprStmt（Express Statement），调用函数的表达式对应的是CallExpr(Call Expression)，调用的参数自然不能错过，因为参数只有字符串，所以go把它归为ast.BasicLis (a literal of basic type)。</li>
+</ul>
+<h2 id="语义分析">语义分析</h2>
+<p>语义分析是Go编译的第三步，也被称为类型检查。在词法和语法分析之后，会得到每个文件对应的抽象语法树，类型检查会遍历语法树中的节点，对每个节点按照不同的情况进行如下的校验。这一阶段可以检测到类型的错误与不匹配。</p>
+<ol>
+<li>常量、类型和函数名及类型；</li>
+<li>变量的赋值和初始化；</li>
+<li>函数和闭包的主体；</li>
+<li>哈希键值对的类型；</li>
+<li>导入函数体；</li>
+<li>外部的声明；</li>
+</ol>
+<p>在编译器入口的<code>src/cmd/compile/internal/gc</code>的main.go中，会调用<code>typecheck</code>进行类型检查。go语言的类型检查源代码位于<code>src/cmd/compile/internal/gc/typecheck.go</code>，最主要是是<code>typecheck</code>和<code>typecheck1</code>函数，<code>typecheck</code>主要作用就是判断编译器是否对当前节点执行过类型检查，同时做一些类型检查之前的准备工作。<code>typecheck1</code>是最核心的逻辑，这个函数由一个巨型的switch/case 构成，根据传入节点操作的不同，进入不同的 case 执行其中逻辑。
+以一个case为例，分析下过程。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">OTARRAY</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ok</span> <span style="color:#f92672">|=</span> <span style="color:#a6e22e">Etype</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">typecheck</span>(<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span>, <span style="color:#a6e22e">Etype</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Type</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Type</span> = <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span></code></pre></div><p>这个分支首先会对右节点进行检查，即切片的元素类型。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Left</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">t</span> = <span style="color:#a6e22e">types</span>.<span style="color:#a6e22e">NewSlice</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Type</span>)
+</span></span><span style="display:flex;"><span>		} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Left</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">ODDD</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">top</span><span style="color:#f92672">&amp;</span><span style="color:#a6e22e">ctxCompLit</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Diag</span>() {
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">SetDiag</span>(<span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">yyerror</span>(<span style="color:#e6db74">&#34;use of [...] array outside of array literal&#34;</span>)
+</span></span><span style="display:flex;"><span>				}
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Type</span> = <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">t</span> = <span style="color:#a6e22e">types</span>.<span style="color:#a6e22e">NewDDDArray</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Type</span>)
+</span></span><span style="display:flex;"><span>		} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>		}
+</span></span></code></pre></div><p>然后会根据左节点的不同，对Node进行操作，这三种形式：<code>[]int</code>,<code>[...]int</code>,<code>[3]int</code>。如果是第一种，会直接调用<code>NewSlice</code>返回一个<code>TSLICE</code>类型结构。如果是第二种，会调用<code>NewDDDArray</code>,返回一个需要推导的数组类型。最后如果源代码包含了数组大小，会调用<code>NewArray</code>返回一个<code>TARRAY</code>类型结构体。</p>
+<h2 id="中间代码生成">中间代码生成</h2>
+<p>前面的词法分析、语法分析、语义分析属于编译器前端的内容，之后的阶段属于编译器后端。目标机器会有着各种各样的操作系统，不同的cpu类型，在生成机器码之前，会先生成用于抽象机器的代码，即中间代码。go语言使用的就是SSA特性的中间码(IR)，这种形式的中间码，最重要的一个特性就是最在使用变量之前总是定义变量，并且每个变量只分配一次。中间代码的生成过程就是抽象语法树到SSA中间代码的转成过程。</p>
+<p>go语言中间代码转换位于<code>src/cmd/compile/internal/gc/ssa.go</code>中，主要逻辑根据当前的 CPU 架构初始化 SSA 配置 <code>ssaConfig</code>,注册runtime的方法，然后会对抽象语法树中节点的一些元素进行替换，比如将关键字<code>panic</code>转换为内置函数<code>gopanic</code>，<code>make</code>可以转成<code>makechan</code>、<code>makechan64</code>、<code>makemap</code>等等。转换后的函数可以在<code>src/cmd/compile/internal/gc/builtin/runtime.go</code>找到定义。这期间语法树会经过多轮的处理优化变成最后的SSA中间代码。在这个阶段主要优化是死码删除、逃逸分析、函数内联。</p>
+<p>下面是demo.go的SSA中间代码，可以用<code>sudo GOSSAFUNC=main GOOS=linux GOARCH=amd64 go build demo.go</code>查看。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>buildssa-enter
+</span></span><span style="display:flex;"><span>buildssa-body
+</span></span><span style="display:flex;"><span>. DCL l(6)
+</span></span><span style="display:flex;"><span>. . NAME-fmt.a a(true) l(273) x(0) class(PAUTO) esc(no) tc(1) assigned used SLICE-[]interface {}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. DCL l(6)
+</span></span><span style="display:flex;"><span>. . NAME-fmt.n a(true) l(273) x(0) class(PAUTO) esc(no) tc(1) assigned used int
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. DCL l(6)
+</span></span><span style="display:flex;"><span>. . NAME-fmt.err a(true) l(273) x(0) class(PAUTO) esc(no) tc(1) assigned used error
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. BLOCK-init
+</span></span><span style="display:flex;"><span>. . AS l(6) tc(1)
+</span></span><span style="display:flex;"><span>. . . NAME-main..autotmp_8 a(true) l(6) x(0) class(PAUTO) esc(N) tc(1) assigned used INTER-interface {}
+</span></span><span style="display:flex;"><span>. . . EFACE l(6) tc(1) INTER-interface {}
+</span></span><span style="display:flex;"><span>. . . . ADDR a(true) l(6) tc(1) PTR-*uint8
+</span></span><span style="display:flex;"><span>. . . . . NAME-type.string a(true) x(0) class(PEXTERN) tc(1) uint8
+</span></span><span style="display:flex;"><span>. . . . ADDR l(6) tc(1) PTR-*string
+</span></span><span style="display:flex;"><span>. . . . . NAME-main..stmp_0 a(true) l(6) x(0) class(PEXTERN) tc(1) addrtaken used string
+</span></span><span style="display:flex;"><span>. BLOCK l(6) hascall
+</span></span><span style="display:flex;"><span>. BLOCK-list
+</span></span><span style="display:flex;"><span>. . AS l(6) tc(1)
+</span></span><span style="display:flex;"><span>. . . NAME-main.~arg0 a(true) l(6) x(0) class(PAUTO) esc(no) tc(1) assigned used INTER-interface {}
+</span></span><span style="display:flex;"><span>. . . NAME-main..autotmp_8 a(true) l(6) x(0) class(PAUTO) esc(N) tc(1) assigned used INTER-interface {}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>//...
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. . AS l(6) tc(1)
+</span></span><span style="display:flex;"><span>. . . NAME-fmt.err a(true) l(273) x(0) class(PAUTO) esc(no) tc(1) assigned used error
+</span></span><span style="display:flex;"><span>. . . NAME-fmt..autotmp_4 a(true) l(274) x(0) class(PAUTO) esc(no) tc(1) assigned used error
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. GOTO l(6) tc(1) main..i0
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. LABEL l(6) tc(1) main..i0
+</span></span><span style="display:flex;"><span>buildssa-exit
+</span></span></code></pre></div><h2 id="机器码生成">机器码生成</h2>
+<p>机器码生成就是根据 SSA 中间代码生成机器码，这也是编译的最后一步了。在这个阶段中间代码被转化为汇编代码（Plan9），然后调用汇编器，汇编器会根据我们在执行编译时设置的架构，调用对应代码来生成目标机器码。这一过程会进行机器的相关优化、死码的进一步消除、合并指令和寄存器分配。</p>
+<p>下面是demo.go的汇编代码，可以用<code> go tool compile -N -l -S demo.go</code>查看。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34;&#34;.main STEXT size=147 args=0x0 locals=0x68
+</span></span><span style="display:flex;"><span>	0x0000 00000 (demo.go:5)	TEXT	&#34;&#34;.main(SB), ABIInternal, $104-0
+</span></span><span style="display:flex;"><span>	0x0000 00000 (demo.go:5)	MOVQ	(TLS), CX
+</span></span><span style="display:flex;"><span>	0x0009 00009 (demo.go:5)	CMPQ	SP, 16(CX)
+</span></span><span style="display:flex;"><span>	0x000d 00013 (demo.go:5)	JLS	137
+</span></span><span style="display:flex;"><span>	0x000f 00015 (demo.go:5)	SUBQ	$104, SP
+</span></span><span style="display:flex;"><span>	0x0013 00019 (demo.go:5)	MOVQ	BP, 96(SP)
+</span></span><span style="display:flex;"><span>	0x0018 00024 (demo.go:5)	LEAQ	96(SP), BP
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:5)	FUNCDATA	$0, gclocals·69c1753bd5f81501d95132d08af04464(SB)
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:5)	FUNCDATA	$1, gclocals·86da00badb1a277fd4ad05aca8027ea8(SB)
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:5)	FUNCDATA	$2, gclocals·bfec7e55b3f043d1941c093912808913(SB)
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:5)	FUNCDATA	$3, &#34;&#34;.main.stkobj(SB)
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:6)	PCDATA	$0, $0
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:6)	PCDATA	$1, $1
+</span></span><span style="display:flex;"><span>	0x001d 00029 (demo.go:6)	XORPS	X0, X0
+</span></span><span style="display:flex;"><span>	0x0020 00032 (demo.go:6)	MOVUPS	X0, &#34;&#34;..autotmp_0+56(SP)
+</span></span><span style="display:flex;"><span>	0x0025 00037 (demo.go:6)	PCDATA	$0, $1
+</span></span><span style="display:flex;"><span>  ...
+</span></span></code></pre></div><h2 id="参考">参考</h2>
+<ul>
+<li><a href="https://github.com/golang/go/tree/master/src/cmd/compile">Introduction to the Go compiler</a></li>
+<li><a href="https://golang.org/ref/spec">The Go Programming Language Specification</a></li>
+<li><a href="https://book.douban.com/subject/3652388/">程序员的自我修养</a></li>
+<li><a href="https://draveness.me/golang/compile/golang-compile-intro.html">1.1 概述· 浅谈Go 语言实现原理 - 面向信仰编程</a></li>
+</ul>
+
+  </div>
+
+  <footer class="post-footer">
+    
+
+    
+    <div class="post-tags">
+      <i class="fas fa-tags"></i>
+      
+        <a href="/tags/golang">Golang</a>
+        &nbsp;
+      
+        <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86">编译原理</a>
+        &nbsp;
+      
+    </div>
+    
+
+    
+    
+  </footer>
+  
+  <div class="comments">
+  <div class="comments">
+
+
+<script src="https://giscus.app/client.js"
+    data-repo="PengLiu0423/discussion"
+    data-repo-id="R_kgDOJBibYw"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOJBibY84CUanA"
+    data-strict="0"
+    data-mapping="pathname"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin="anonymous"
+    async>
+  </script></div>
+  </div>
+</article>
+
+  <div class="foot">
+  
+  &copy; 2024 - 2025 &#183;
+  <a href="/"> Peng&#39;s blog </a> &#183;
+  Theme <a href="https://github.com/RainerChiang/simpleness">Simpleness</a> Powered by <a href="https://gohugo.io/">Hugo</a> &#183;
+  <a href="#"><i class="fas fa-chevron-up"></i></a>
+</div>
+</body>
+  <script src="/js/lazyload.min.js"></script>
+<script>
+  var lazyImage = new LazyLoad({container: document.getElementById('article')});
+</script>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc=" crossorigin="anonymous"></script>
+<script>
+    (function() {
+        var $toc = $('#TableOfContents');
+        if ($toc.length > 0) {
+            var $window = $(window);
+
+            function onScroll(){
+                var currentScroll = $window.scrollTop();
+                var h = $('.post-text h1, .post-text h2, .post-text h3, .post-text h4, .post-text h5, .post-text h6');
+                var id = "";
+                h.each(function (i, e) {
+                    e = $(e);
+                    if (e.offset().top - 10 <= currentScroll) {
+                        id = e.attr('id');
+                    }
+                });
+                var active = $toc.find('a.active');
+                if (active.length == 1 && active.eq(0).attr('href') == '#' + id) return true;
+
+                active.each(function (i, e) {
+                    $(e).removeClass('active').siblings('ul').hide();
+                });
+                $toc.find('a[href="#' + id + '"]').parentsUntil('#TableOfContents').each(function (i, e) {
+                    $(e).children('a').addClass('active').siblings('ul').show();
+                });
+            }
+
+            $window.on('scroll', onScroll);
+            $(document).ready(function() {
+                $toc.find('a').parent('li').find('ul').hide();
+                onScroll();
+                document.getElementsByClassName('post-toc')[0].style.display = '';
+            });
+        }
+    })();
+</script>
+
+
+</html>

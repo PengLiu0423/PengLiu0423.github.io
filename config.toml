@@ -2,7 +2,7 @@ baseURL = "https://pengliu0423.github.io/"
 languageCode = "zh-cn"
 DefaultContentLanguage = "zh-cn"
 theme = "simpleness"
-
+publishDir = "docs"
 title = "Peng's blog"
 enableInlineShortcodes = true
 enableEmoji = true
