@@ -6,8 +6,15 @@
     <description>Recent content in Posts on Peng&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 08 Mar 2020 08:20:14 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 21 Dec 2024 12:36:46 +0800</lastBuildDate>
     <atom:link href="https://pengliu0423.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>01.22复盘及明日策略</title>
+      <link>https://pengliu0423.github.io/posts/25-01-21-%E5%A4%8D%E7%9B%98%E5%8F%8A%E6%98%8E%E6%97%A5%E7%AD%96%E7%95%A5/</link>
+      <pubDate>Sat, 21 Dec 2024 12:36:46 +0800</pubDate>
+      <guid>https://pengliu0423.github.io/posts/25-01-21-%E5%A4%8D%E7%9B%98%E5%8F%8A%E6%98%8E%E6%97%A5%E7%AD%96%E7%95%A5/</guid>
+      <description>今日操作 试试</description>
+    </item>
     <item>
       <title>探究Golang之编译原理</title>
       <link>https://pengliu0423.github.io/posts/%E6%8E%A2%E7%A9%B6golang%E4%B9%8B%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/</link>
